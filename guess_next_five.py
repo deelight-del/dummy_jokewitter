@@ -5,6 +5,8 @@
 from fastai.collab import *
 from fastai.tabular.all import *
 
+# Load our dataframe.
+ratings_df = pd.read_pickle('./mini_ratings-df.pkl')
 
 if __name__ == "__main__":
     learn_inf = load_learner('./export.pkl')
