@@ -1,0 +1,1 @@
+Install torch and torchvision of gpu/cudnn version. (Change from cpu version to gpu version.)
