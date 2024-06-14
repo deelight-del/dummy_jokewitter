@@ -6,9 +6,13 @@ from fastai.collab import *
 from fastai.tabular.all import *
 
 
-#We need a model to train the data on,
+#The class, as defined in the actual module,
 class DotProduct(Module):
-    def __init__(self, n_users, n_items, n_factors, y_range=(-9.5, 10.5)):
+    """Dot Product Class that is used to construct
+    the behaviour of the collab filtering
+    model."""
+    def __init__(self, n_users, n_items,
+                 n_factors, y_range=(-9.5, 10.5)):
         self.user_factors = Embedding(n_users, n_factors)
         self.user_bias = Embedding(n_users, 1)
         self.item_factors = Embedding(n_items, n_factors)
@@ -17,6 +21,7 @@ class DotProduct(Module):
         pass
     
     def forward(self, x):
+        """Define the forward propagation."""
         users = self.user_factors(x[:,0])
         items = self.item_factors(x[:,1])
         res = (users * items).sum(dim=1, keepdim=True)
@@ -25,27 +30,30 @@ class DotProduct(Module):
 
 
 
-# Load our dataframe.
+# Load in our pickled dataframe.
 ratings_df = pd.read_pickle('./mini_ratings-df.pkl')
 
-# Load our learner.
+# Load in our learner.
 learn_inf = load_learner('./export-3-10.pkl')
 
 
 if __name__ == "__main__":
     dls_inf = learn_inf.dls
     joke_factors_inf = learn_inf.model.item_factors.weight
-    idx_int = 19
+    idx_int = 130  # You can change this id, to get different results.
     cls_idx = tensor(dls_inf.classes['jokeId'].o2i[idx_int])
     int_joke_emb = joke_factors_inf[cls_idx, None]
     distances = nn.CosineSimilarity(dim=1)(joke_factors_inf, int_joke_emb)
-    closest_emb_idx = distances.argsort(descending=True)[1:6] #Top 5 closest jokes.
+    #Top 5 closest jokes.
+    closest_emb_idx = distances.argsort(descending=True)[1:6]
     closest_idx = dls_inf.classes['jokeId'][closest_emb_idx]
     # Print the actual joke.
     print('The actual joke is:')
     print(ratings_df[ratings_df['jokeId'] == idx_int].head(1).jokeText)
     print('========================================')
-    closest_jokes = ratings_df[ratings_df["jokeId"].isin(closest_idx)].drop_duplicates("jokeId")["jokeText"]
+    closest_jokes = (ratings_df[ratings_df["jokeId"].isin(closest_idx)]
+                    .drop_duplicates("jokeId")["jokeText"]
+    )
     # closest_jokes = closest_jokes.str.replace("\n", " ")
     print('The closest jokes are:')
     for joke in closest_jokes:
